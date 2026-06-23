@@ -9,9 +9,9 @@ const routes = [
   },
 
   {
-    path: "/:catchAll(.*)",
-    name: "NotFound",
-    component: () => import("@/views/NotFound.vue"),
+    path: "/contacts/add",
+    name: "contact.add",
+    component: () => import("@/views/ContactAdd.vue"),
   },
 
   {
@@ -19,6 +19,12 @@ const routes = [
     name: "contact.edit",
     component: () => import("@/views/ContactEdit.vue"),
     props: true, // Truyền các biến trong $route.params vào làm props
+  },
+
+  {
+    path: "/:catchAll(.*)",
+    name: "NotFound",
+    component: () => import("@/views/NotFound.vue"),
   },
 ];
 

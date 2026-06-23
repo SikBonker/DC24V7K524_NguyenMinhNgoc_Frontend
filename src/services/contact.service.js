@@ -3,8 +3,12 @@ class ContactService {
   constructor(baseUrl = "/api/contacts") {
     this.api = createApiClient(baseUrl);
   }
-  async getAll() {
-    return (await this.api.get("/")).data;
+  async getAll(name = "") {
+    return (
+      await this.api.get("/", {
+        params: name ? { name } : {},
+      })
+    ).data;
   }
   async create(data) {
     return (await this.api.post("/", data)).data;

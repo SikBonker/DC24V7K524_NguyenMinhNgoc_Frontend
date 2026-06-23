@@ -10,8 +10,7 @@
                 <i class="fas fa-address-book"></i>
             </h4>
 
-            <ContactList v-if="filteredContactsCount > 0" :contacts="filteredContacts"
-                v-model:activeIndex="activeIndex" />
+            <ContactList v-if="contacts.length > 0" :contacts="contacts" v-model:activeIndex="activeIndex" />
             <p v-else>Không có liên hệ nào.</p>
 
             <div class="mt-3 row justify-content-around align-items-center">
@@ -72,37 +71,24 @@ export default {
     watch: {
         // Giám sát các thay đổi của biến searchText.
         // Bỏ chọn phần tử đang được chọn trong danh sách.
-        searchText() {
+        searchText(newValue) {
             this.activeIndex = -1;
+            this.retrieveContacts(newValue.trim());
         },
     },
     computed: {
-        // Chuyển các đối tượng contact thành chuỗi để tiện cho tìm kiếm.
-        contactStrings() {
-            return this.contacts.map((contact) => {
-                const { name, email, address, phone } = contact;
-                return [name, email, address, phone].join("");
-            });
-        },
-        // Trả về các contact có chứa thông tin cần tìm kiếm.
-        filteredContacts() {
-            if (!this.searchText) return this.contacts;
-            return this.contacts.filter((_contact, index) =>
-                this.contactStrings[index].includes(this.searchText)
-            );
-        },
         activeContact() {
             if (this.activeIndex < 0) return null;
-            return this.filteredContacts[this.activeIndex];
+            return this.contacts[this.activeIndex];
         },
         filteredContactsCount() {
-            return this.filteredContacts.length;
+            return this.contacts.length;
         },
     },
     methods: {
-        async retrieveContacts() {
+        async retrieveContacts(name = "") {
             try {
-                this.contacts = await ContactService.getAll();
+                this.contacts = await ContactService.getAll(name);
             } catch (error) {
                 console.log(error);
             }

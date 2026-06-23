@@ -2,12 +2,14 @@
     <div v-if="contact" class="page">
         <h4>Hiệu chỉnh Liên hệ</h4>
         <ContactForm :contact="contact" @submit:contact="updateContact" @delete:contact="deleteContact" />
-        <p>{{ message }}</p>
+        <p v-if="message" class="alert alert-success mt-2">{{ message }}</p>
     </div>
 </template>
+
 <script>
 import ContactForm from "@/components/ContactForm.vue";
 import ContactService from "@/services/contact.service";
+
 export default {
     components: {
         ContactForm,
@@ -26,10 +28,10 @@ export default {
             try {
                 this.contact = await ContactService.get(id);
             } catch (error) {
-                console.log(error);
+                console.error(error);
                 // Chuyển sang trang NotFound đồng thời giữ cho URL không đổi
                 this.$router.push({
-                    name: "notfound",
+                    name: "NotFound",
                     params: {
                         pathMatch: this.$route.path.split("/").slice(1)
                     },
@@ -41,10 +43,15 @@ export default {
         async updateContact(data) {
             try {
                 await ContactService.update(this.contact._id, data);
-                alert('Liên hệ được cập nhật thành công.');
-                this.$router.push({ name: "contactbook" });
+                this.message = "Liên hệ được cập nhật thành công.";
+
+                // Đợi 1.5 giây để người dùng kịp đọc thông báo rồi mới chuyển trang
+                setTimeout(() => {
+                    this.$router.push({ name: "contactbook" });
+                }, 1500);
             } catch (error) {
-                console.log(error);
+                console.error(error);
+                this.message = "Có lỗi xảy ra khi cập nhật liên hệ.";
             }
         },
         async deleteContact() {
@@ -53,7 +60,7 @@ export default {
                     await ContactService.delete(this.contact._id);
                     this.$router.push({ name: "contactbook" });
                 } catch (error) {
-                    console.log(error);
+                    console.error(error);
                 }
             }
         },
@@ -64,3 +71,10 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.page {
+    max-width: 400px;
+    margin: auto;
+}
+</style>
