@@ -2,7 +2,8 @@
     <div v-if="contact" class="page">
         <h4>Hiệu chỉnh Liên hệ</h4>
         <ContactForm :contact="contact" @submit:contact="updateContact" @delete:contact="deleteContact" />
-        <p v-if="message" class="alert alert-success mt-2">{{ message }}</p>
+        <p v-if="message" :class="['alert', messageType ? `alert-${messageType}` : 'alert-success', 'mt-2']">{{ message
+            }}</p>
     </div>
 </template>
 
@@ -21,6 +22,7 @@ export default {
         return {
             contact: null,
             message: "",
+            messageType: "",
         };
     },
     methods: {
@@ -29,29 +31,24 @@ export default {
                 this.contact = await ContactService.get(id);
             } catch (error) {
                 console.error(error);
-                // Chuyển sang trang NotFound đồng thời giữ cho URL không đổi
-                this.$router.push({
-                    name: "NotFound",
-                    params: {
-                        pathMatch: this.$route.path.split("/").slice(1)
-                    },
-                    query: this.$route.query,
-                    hash: this.$route.hash,
-                });
+                this.message = error.response?.data?.message || "Không thể tải dữ liệu liên hệ.";
+                this.messageType = "danger";
             }
         },
         async updateContact(data) {
             try {
-                await ContactService.update(this.contact._id, data);
+                const id = this.contact?._id || this.id;
+                await ContactService.update(id, data);
                 this.message = "Liên hệ được cập nhật thành công.";
+                this.messageType = "success";
 
-                // Đợi 1.5 giây để người dùng kịp đọc thông báo rồi mới chuyển trang
                 setTimeout(() => {
                     this.$router.push({ name: "contactbook" });
                 }, 1500);
             } catch (error) {
                 console.error(error);
-                this.message = "Có lỗi xảy ra khi cập nhật liên hệ.";
+                this.message = error.response?.data?.message || "Có lỗi xảy ra khi cập nhật liên hệ.";
+                this.messageType = "danger";
             }
         },
         async deleteContact() {
@@ -61,6 +58,8 @@ export default {
                     this.$router.push({ name: "contactbook" });
                 } catch (error) {
                     console.error(error);
+                    this.message = error.response?.data?.message || "Có lỗi xảy ra khi xóa liên hệ.";
+                    this.messageType = "danger";
                 }
             }
         },
