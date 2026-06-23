@@ -7,6 +7,12 @@ const routes = [
     name: "contactbook",
     component: ContactBook,
   },
+
+  {
+    path: "/:catchAll(.*)",
+    name: "NotFound",
+    component: () => import("@/views/NotFound.vue"),
+  },
 ];
 
 const router = createRouter({
