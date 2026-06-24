@@ -25,18 +25,43 @@
         </div>
 
         <div class="form-group form-check">
+            <input id="hobby-toggle" type="checkbox" class="form-check-input" v-model="showHobbyOptions"
+                @change="toggleHobbyOptions" />
+            <label class="form-check-label" for="hobby-toggle">
+                <strong>Sở thích</strong>
+            </label>
+        </div>
+
+        <div class="form-group" v-if="showHobbyOptions">
+            <label class="d-block mb-2">Chọn sở thích</label>
+            <Field name="hobby" v-slot="{ field }">
+                <div class="hobby-options">
+                    <div class="form-check hobby-option" v-for="option in hobbyOptions" :key="option.value">
+                        <input :id="`hobby-${option.value}`" class="form-check-input" type="checkbox"
+                            :checked="Array.isArray(field.value) && field.value.includes(option.value)"
+                            @change="setHobby(field, option.value)" />
+                        <label class="form-check-label" :for="`hobby-${option.value}`">
+                            {{ option.label }}
+                        </label>
+                    </div>
+                </div>
+            </Field>
+            <ErrorMessage name="hobby" class="error-feedback" />
+        </div>
+
+        <div class="form-group form-check">
             <input name="favorite" type="checkbox" class="form-check-input" v-model="contactLocal.favorite" />
             <label for="favorite" class="form-check-label">
                 <strong>Liên hệ yêu thích</strong>
             </label>
         </div>
 
-        <div class="form-group">
+        <div class="form-group button-row">
             <button type="submit" class="btn btn-primary">Lưu</button>
-            <button v-if="contactLocal._id" type="button" class="ml-2 btn btn-danger" @click="deleteContact">
+            <button v-if="contactLocal._id" type="button" class="btn btn-danger" @click="deleteContact">
                 Xóa
             </button>
-            <button type="button" class="ml-2 btn btn-secondary" @click="Cancel">
+            <button type="button" class="btn btn-secondary" @click="Cancel">
                 Thoát
             </button>
         </div>
@@ -76,21 +101,68 @@ export default {
                     /^(03|05|07|08|09)\d{8}$/,
                     "Số điện thoại không hợp lệ (phải gồm 10 số)."
                 ),
+            hobby: yup
+                .array()
+                .of(yup.string().max(50, "Sở thích tối đa 50 ký tự."))
+                .default([]),
         });
         return {
-            contactLocal: { ...this.contact },
+            contactLocal: {
+                ...this.contact,
+                hobby: Array.isArray(this.contact.hobby)
+                    ? this.contact.hobby
+                    : this.contact.hobby
+                        ? [this.contact.hobby]
+                        : [],
+            },
+            showHobbyOptions: Array.isArray(this.contact.hobby)
+                ? this.contact.hobby.length > 0
+                : Boolean(this.contact.hobby),
             contactFormSchema,
+            hobbyOptions: [
+                { value: "Chơi game", label: "Chơi game" },
+                { value: "Thể thao", label: "Thể thao" },
+                { value: "Học tập", label: "Học tập" },
+                { value: "Khác", label: "Khác" },
+            ],
         };
     },
     watch: {
         contact: {
             handler(newContact) {
-                this.contactLocal = { ...newContact };
+                this.contactLocal = {
+                    ...newContact,
+                    hobby: Array.isArray(newContact.hobby)
+                        ? newContact.hobby
+                        : newContact.hobby
+                            ? [newContact.hobby]
+                            : [],
+                };
+                this.showHobbyOptions = Array.isArray(newContact.hobby)
+                    ? newContact.hobby.length > 0
+                    : Boolean(newContact.hobby);
             },
             immediate: true,
         },
     },
     methods: {
+        setHobby(field, value) {
+            const currentValue = Array.isArray(field.value)
+                ? field.value
+                : field.value
+                    ? [field.value]
+                    : [];
+            const newValue = currentValue.includes(value)
+                ? currentValue.filter((item) => item !== value)
+                : [...currentValue, value];
+            field.value = newValue;
+            this.contactLocal.hobby = newValue;
+        },
+        toggleHobbyOptions() {
+            if (!this.showHobbyOptions) {
+                this.contactLocal.hobby = [];
+            }
+        },
         async submitContact() {
             // Thêm await trước $emit để đợi component Cha xử lý xong API cập nhật
             await this.$emit("submit:contact", this.contactLocal);
@@ -117,5 +189,53 @@ export default {
     font-size: 0.875em;
     margin-top: 0.25rem;
     display: block;
+}
+
+.form-group {
+    margin-bottom: 0.9rem;
+}
+
+.form-check {
+    margin-bottom: 0.75rem;
+}
+
+.hobby-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.hobby-option {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-start;
+}
+
+button.btn {
+    min-width: 90px;
+}
+
+@media (max-width: 576px) {
+    .hobby-options {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    button.btn {
+        width: 100%;
+    }
 }
 </style>

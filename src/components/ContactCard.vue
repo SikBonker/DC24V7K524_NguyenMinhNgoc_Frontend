@@ -25,6 +25,11 @@ export default {
             {{ contact.phone }}
         </div>
         <div class="p-1">
+            <strong>Sở thích:</strong>
+            {{ Array.isArray(contact.hobby) ? (contact.hobby.length ? contact.hobby.join(', ') : 'Không có') :
+                (contact.hobby || 'Không có') }}
+        </div>
+        <div class="p-1">
             <strong>Liên hệ yêu thích:&nbsp;</strong>
             <i v-if="contact.favorite" class="fas fa-check"></i>
             <i v-else class="fas fa-times"></i>
